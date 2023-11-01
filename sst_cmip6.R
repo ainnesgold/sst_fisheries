@@ -12,12 +12,16 @@ library(ncdf4)
 fname <- "CMIP6 trials/4.5/tos_Omon_CESM2_ssp245_r4i1p1f1_gn_201501-206412_v20200528.nc"
 
 temp_file <- brick(fname)
+plot(temp_file[[1]])
 
 lon.pts <- seq(202,202.99,by=0.01) #~long of Oahu edges (calculated as 360 - lon to get degrees east). 202-202.99 by 0.01
 lat.pts <- seq(201.5, 202.49, by=0.01)  #degrees north. equator is 180 + oahu latittude edges (21) = 201, 201.99
 extract.pts <- cbind(lon.pts,lat.pts)
 ann.extract <- extract(temp_file,extract.pts,method="bilinear")
 extracted_number_years <- (length(ann.extract) / 1200.0)
+
+plot(crop(temp_file[[1]], extract.pts))
+
 
 #2015 to 2064
 years <- array(2015:2064)

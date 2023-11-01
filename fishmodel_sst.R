@@ -1,4 +1,4 @@
-#Schaefer model
+
 patch_area <- c(1, 0)
 number_patches <- length(patch_area)
 timesteps <- 80
@@ -43,22 +43,21 @@ K_temp_2 <- array(NA, dim = c(timesteps, 1))
 
 
 for (t in 2:timesteps) {
-  for (i in 1:number_patches){
     
     #no temp
-    population[t,i] <- population[t-1, i] + r * population[t-1, i] * (1 - population[t-1,i] / K)
+    population[t,] <- population[t-1,] + r * population[t-1,] * (1 - population[t-1,] / K)
     
     #temp dependent r - "current" temp as optimal
     r_temp_1[t] <- 0.3 + 0*SST_dev[t] + -0.0037*SST_dev[t]^2
-    population_r1[t,i] <- population_r1[t-1, i] + r_temp_1[t] * population_r1[t-1, i] * (1 - population_r1[t-1,i] / K)
+    population_r1[t,] <- population_r1[t-1,] + r_temp_1[t] * population_r1[t-1,] * (1 - population_r1[t-1,] / K)
     
     #temp dependent r - higher optimal temp
     r_temp_2[t] <- a + b*SST_dev_higheropttemp[t] + c*SST_dev_higheropttemp[t]^2
-    population_r2[t,i] <- population_r2[t-1, i] + r_temp_2[t] * population_r2[t-1, i] * (1 - population_r2[t-1,i] / K)
+    population_r2[t,] <- population_r2[t-1,] + r_temp_2[t] * population_r2[t-1,] * (1 - population_r2[t-1,] / K)
     
     #temp dependent r - lower optimal temp
     r_temp_3[t] <- a + b*SST_dev_loweropttemp[t] + c*SST_dev_loweropttemp[t]^2
-    population_r3[t,i] <- population_r3[t-1, i] + r_temp_3[t] * population_r3[t-1, i] * (1 - population_r3[t-1,i] / K)
+    population_r3[t,] <- population_r3[t-1,] + r_temp_3[t] * population_r3[t-1,] * (1 - population_r3[t-1,] / K)
     
     #temp dependent K - piece wise linear function
     K_temp_1[t] <- -2.1408 * mean_temps_series[t] + 160.253358
@@ -67,7 +66,7 @@ for (t in 2:timesteps) {
     } else if (K_temp_1[t] > 101.3) {
       K_temp_1[t] <- 101.3
     }
-    population_K1[t,i] <- population_K1[t-1, i] + r * population_K1[t-1, i] * (1 - population_K1[t-1,i] / K_temp_1[t])
+    population_K1[t,] <- population_K1[t-1,] + r * population_K1[t-1,] * (1 - population_K1[t-1,] / K_temp_1[t])
     
     #temp dependent K - quadratic function
     K_temp_2[t] <- 101.3 + 0*SST_dev[t] + -0.7*SST_dev[t]^2
@@ -76,8 +75,7 @@ for (t in 2:timesteps) {
     else if (K_temp_2[t] > 101.3) {
       K_temp_2[t] <- 101.3
     }
-    population_K2[t,i] <- population_K2[t-1, i] + r * population_K2[t-1, i] * (1 - population_K2[t-1,i] / K_temp_2[t])
-  }
+    population_K2[t,] <- population_K2[t-1,] + r * population_K2[t-1,] * (1 - population_K2[t-1,] / K_temp_2[t])
 }
 
 
