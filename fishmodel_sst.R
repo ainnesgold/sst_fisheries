@@ -1,17 +1,19 @@
+library(tidyverse)
+
+
+projections <- read.csv("anomaly_df.csv")
+SST_dev <- projections[['anomaly']]
+SST_dev_loweropttemp <- projections[['anomaly']] + 1 #larger anomaly = lower optimal temp
+SST_dev_higheropttemp <- projections[['anomaly']] - 1 #smaller anomaly = higher optimal temp
 
 patch_area <- c(1, 0)
 number_patches <- length(patch_area)
-timesteps <- 80
+timesteps <- length(SST_dev)
 r = 0.3
 K = 101.3
 
-projections <- read.csv("projections.csv")
-SST_dev <- projections[['anomaly']]
-SST_dev_higheropttemp <- projections[['anomaly_higheropttemp']]
-SST_dev_loweropttemp <- projections[['anomaly_loweropttemp']]
-
-mean_temps_crop <- read.csv("mean_temps_crop.csv")
-mean_temps_series <- mean_temps_crop[['extracted_mean_temps']]
+#mean_temps_crop <- read.csv("mean_temps_crop.csv")
+#mean_temps_series <- mean_temps_crop[['extracted_mean_temps']]
 
 population <- array(NA, dim = c(timesteps, number_patches))
 population[1,] <- c(10,0)
@@ -52,15 +54,15 @@ for (t in 2:timesteps) {
     population_r1[t,] <- population_r1[t-1,] + r_temp_1[t] * population_r1[t-1,] * (1 - population_r1[t-1,] / K)
     
     #temp dependent r - higher optimal temp
-    r_temp_2[t] <- a + b*SST_dev_higheropttemp[t] + c*SST_dev_higheropttemp[t]^2
+    r_temp_2[t] <- 0.3 + 0*SST_dev_higheropttemp[t] + -0.0037*SST_dev_higheropttemp[t]^2
     population_r2[t,] <- population_r2[t-1,] + r_temp_2[t] * population_r2[t-1,] * (1 - population_r2[t-1,] / K)
     
     #temp dependent r - lower optimal temp
-    r_temp_3[t] <- a + b*SST_dev_loweropttemp[t] + c*SST_dev_loweropttemp[t]^2
+    r_temp_3[t] <- 0.3 + 0*SST_dev_loweropttemp[t] + -0.0037*SST_dev_loweropttemp[t]^2
     population_r3[t,] <- population_r3[t-1,] + r_temp_3[t] * population_r3[t-1,] * (1 - population_r3[t-1,] / K)
     
     #temp dependent K - piece wise linear function
-    K_temp_1[t] <- -2.1408 * mean_temps_series[t] + 160.253358
+    K_temp_1[t] <- -4.95243768 * SST_dev[t] + 101.3
     if (K_temp_1[t] < 10) {
       K_temp_1[t] <- 10
     } else if (K_temp_1[t] > 101.3) {
@@ -87,17 +89,18 @@ plot(population_r3[,1])
 plot(population_K1[,1])
 plot(population_K2[,1])
 
-time <- c(1:80)
+time <- c(1:length(SST_dev))
 df <-cbind(NoTemp = population[,1], r1 = population_r1[,1], r2 = population_r2[,1], r3 = population_r3[,1],
            K1 = population_K1[,1], K2 = population_K2[,1], time)
 
 df_long <- pivot_longer(as.data.frame(df), NoTemp:K2, names_to = "Temp_version", values_to = "Population")
 
 df_long$Temp_version <- factor(df_long$Temp_version, levels = c("NoTemp", "r1", "r2", "r3", "K1", "K2"),
-                               labels = c("No Temp", "r1 (optimal temp: current)", "r2 (higher optimal temp)", 
-                                          "r3 (lower optimal temp)", "K1 (linear)", "K2 (quadratic)"))
+                               labels = c("No Temp", "r1", "r2", 
+                                          "r3", "K1", "K2"))
 
 ggplot(df_long, aes(x=time, y=Population, col=Temp_version)) +
   geom_line() +
-  scale_color_viridis_d()+
-  theme_minimal()
+  scale_color_viridis_d(name = "Model version")+
+  theme_minimal() +
+  theme(text = element_text(size=20), legend.position = "top")

@@ -1,7 +1,14 @@
 library(tidyverse)
+library(ggpubr)
 
 source('dispersal.R')
-timesteps = 80
+
+projections <- read.csv("anomaly_df.csv")
+SST_dev <- projections[['anomaly']]
+SST_dev_loweropttemp <- projections[['anomaly']] + 1 #larger anomaly = lower optimal temp
+SST_dev_higheropttemp <- projections[['anomaly']] - 1 #smaller anomaly = higher optimal temp
+
+timesteps <- length(SST_dev)
 r = 0.3
 K = c(101.3, 101.3)
 S = 0.5
@@ -41,13 +48,6 @@ outcome_harvest_K2 <- matrix(0, ncol = 2, nrow = nrow(parameter_grid))
 
 
 
-projections <- read.csv("projections.csv")
-SST_dev <- projections[['anomaly']]
-SST_dev_higheropttemp <- projections[['anomaly_higheropttemp']]
-SST_dev_loweropttemp <- projections[['anomaly_loweropttemp']]
-
-mean_temps_crop <- read.csv("mean_temps_crop.csv")
-mean_temps_series <- mean_temps_crop[['extracted_mean_temps']]
 
 population <- array(NA, dim = c(timesteps, number_patches))
 harvest <- array(NA, dim = c(timesteps, number_patches))
@@ -204,7 +204,7 @@ for (iter in 1:nrow(parameter_grid)){
     
     
     #temp dependent K - piece wise linear function
-    K_temp_1[t] <- -2.1408 * mean_temps_series[t] + 160.253358
+    K_temp_1[t] <- -4.95243768 * SST_dev[t] + 101.3
     if (K_temp_1[t] < 10) {
       K_temp_1[t] <- 10
     } else if (K_temp_1[t] > 101.3) {
@@ -231,7 +231,11 @@ for (iter in 1:nrow(parameter_grid)){
         population_K1[t, patch_not_above] <- K_temp_1[t] # if it does then set that patch to carrying capacity after spillover
       }
     }
-    
+    if(as.numeric(parameter_grid[['patch_area']][[iter]][,1]) == 0){
+      population_K1[t,1] <- 0
+    } else if (as.numeric(parameter_grid[['patch_area']][[iter]][,2]) == 0) {
+      population_K1[t,2] <- 0
+    }
     
     
     #temp dependent K - quadratic function
@@ -261,6 +265,11 @@ for (iter in 1:nrow(parameter_grid)){
       if(population_K2[t, patch_not_above] > K_temp_2[t]){ # need to check and make sure spillover to the other patch does not push the population over carrying capactiy
         population_K2[t, patch_not_above] <- K_temp_2[t] # if it does then set that patch to carrying capacity after spillover
       }
+    }
+    if(as.numeric(parameter_grid[['patch_area']][[iter]][,1]) == 0){
+      population_K2[t,1] <- 0
+    } else if (as.numeric(parameter_grid[['patch_area']][[iter]][,2]) == 0) {
+      population_K2[t,2] <- 0
     }
   }
   
@@ -358,14 +367,24 @@ outcome_long_wtavg <- outcome_long %>%
            model_version == "wtavg_fish_K2"
            )
 
+outcome_long_wtavg$model_version <- factor(outcome_long_wtavg$model_version, 
+                               levels = c("wtavg_fish_notemp", "wtavg_fish_r1", "wtavg_fish_r2", 
+                                          "wtavg_fish_r3", "wtavg_fish_K1", "wtavg_fish_K2"),
+                               labels = c("No Temp", "r1", "r2", 
+                                          "r3", "K1", "K2"))
+
+
 p1<-ggplot(outcome_long_wtavg, 
            aes(x = area_mpa, y = population, col = model_version)) +
   geom_line() +
   facet_wrap(~fishing_p1) +
-  scale_color_viridis_d() +
+  scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("Fish density"~(g/m^2))) +
   theme_minimal() +
-  ggtitle("Fishing effort")
+  ggtitle("Fishing effort") +
+  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
 
 #patch 1 fish only
 outcome_long_open <- outcome_long %>%
@@ -377,13 +396,22 @@ outcome_long_open <- outcome_long %>%
            model_version == "open_fish_K2"
   )
 
+outcome_long_open$model_version <- factor(outcome_long_open$model_version, 
+                                           levels = c("open_fish_notemp", "open_fish_r1", "open_fish_r2", 
+                                                      "open_fish_r3", "open_fish_K1", "open_fish_K2"),
+                                           labels = c("No Temp", "r1", "r2", 
+                                                      "r3", "K1", "K2"))
+
 ggplot(outcome_long_open, aes(x = area_mpa, y = population, col = model_version)) +
   geom_line() +
   facet_wrap(~fishing_p1) +
-  scale_color_viridis_d() +
+  scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("Open area fish density"~(g/m^2))) +
   theme_minimal() +
-  ggtitle("Fishing effort")
+  ggtitle("Fishing effort") +
+  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
 
 #patch 2 only
 outcome_long_mpa <- outcome_long %>%
@@ -395,13 +423,22 @@ outcome_long_mpa <- outcome_long %>%
            model_version == "mpa_fish_K2"
   )
 
+outcome_long_mpa$model_version <- factor(outcome_long_mpa$model_version, 
+                                          levels = c("mpa_fish_notemp", "mpa_fish_r1", "mpa_fish_r2", 
+                                                     "mpa_fish_r3", "mpa_fish_K1", "mpa_fish_K2"),
+                                          labels = c("No Temp", "r1", "r2", 
+                                                     "r3", "K1", "K2"))
+
 ggplot(outcome_long_mpa, aes(x = area_mpa, y = population, col = model_version)) +
   geom_line() +
   facet_wrap(~fishing_p1) +
-  scale_color_viridis_d() +
+  scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("MPA fish density"~(g/m^2))) +
   theme_minimal() +
-  ggtitle("Fishing effort")
+  ggtitle("Fishing effort") +
+  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
 
 
 
@@ -428,12 +465,52 @@ outcome_harvest_long_open <- outcome_harvest_long %>%
            model_version == "open_harvest_K2"
   )
 
+outcome_harvest_long_open$model_version <- factor(outcome_harvest_long_open$model_version, 
+                                         levels = c("open_harvest_notemp", "open_harvest_r1", "open_harvest_r2", 
+                                                    "open_harvest_r3", "open_harvest_K1", "open_harvest_K2"),
+                                         labels = c("No Temp", "r1", "r2", 
+                                                    "r3", "K1", "K2"))
+
 p2<-ggplot(outcome_harvest_long_open, aes(x = area_mpa, y = harvest, col = model_version)) +
   geom_line() +
   facet_wrap(~fishing_p1) +
-  scale_color_viridis_d() +
+  scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("Harvest density"~(g/m^2))) +
   theme_minimal() +
-  ggtitle("Fishing effort")
+  ggtitle("") +
+  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), 
+        legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
 
 ggarrange(p1+rremove("xlab"), p2, nrow=2, ncol=1, common.legend = TRUE, legend = "bottom")
+
+
+
+
+
+###Plots with just no temp, r1, k2
+#total Fish - wt avg both patches combined
+outcome_long_wtavg <- outcome_long %>%
+  filter(model_version == "wtavg_fish_notemp" |
+           model_version == "wtavg_fish_r1" |
+           model_version == "wtavg_fish_K2"
+  )
+
+outcome_long_wtavg$model_version <- factor(outcome_long_wtavg$model_version, 
+                                           levels = c("wtavg_fish_notemp", "wtavg_fish_r1", 
+                                            "wtavg_fish_K2"),
+                                           labels = c("No Temp", "r1", "K2"))
+
+
+ggplot(outcome_long_wtavg %>% filter(fishing_p1 == 0.1 | fishing_p1 == 0.5 | fishing_p1 == 0.9), 
+           aes(x = area_mpa, y = population, col = model_version)) +
+  geom_line(size=0.5) +
+  facet_wrap(~fishing_p1) +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = bquote("Fish density"~(g/m^2))) +
+  theme_minimal() +
+  ggtitle("Fishing effort") +
+  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
