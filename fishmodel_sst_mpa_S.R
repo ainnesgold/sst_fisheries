@@ -21,7 +21,7 @@ patch_area_grid$Var2 <- 1 - patch_area_grid$Var1
 patch_area_list <- split(patch_area_grid, 1:nrow(patch_area_grid))
 number_patches <- ncol(patch_area_grid)
 
-fishing_effort <- c(0.5, 0)
+fishing_effort <- c(0, 0)
 catchability <- 1
 
 parameter_grid <- expand.grid(patch_area = patch_area_list,
