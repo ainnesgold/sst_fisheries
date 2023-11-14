@@ -571,3 +571,48 @@ ggplot(outcome_harvest_long_open %>% filter(fishing_p1 == 0.1 | fishing_p1 == 0.
   theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
   scale_x_continuous(breaks=c(0.4, 0.5, 0.6),
                      labels = c("0.4", "0.5", "0.6"))
+
+
+
+##only plotting a couple model versions
+ggplot(outcome_long_wtavg %>% filter(fishing_p1 == 0.1 | fishing_p1 == 0.5 | fishing_p1 == 0.9) %>%
+         filter(model_version == "No Temp" | model_version == "r1" | model_version == "K2"), 
+       aes(x = area_mpa, y = population, col = model_version)) +
+  geom_line(size=0.5) +
+  facet_wrap(~fishing_p1, scales = "free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = bquote("Wt avg fish density"~(g/m^2))) +
+  theme_minimal() +
+  ggtitle("Fishing effort outside MPA") +
+  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+
+##harvest
+ggplot(outcome_harvest_long_open %>% filter(fishing_p1 == 0.1 | fishing_p1 == 0.5 | fishing_p1 == 0.9) %>%
+         filter(model_version == "No Temp" | model_version == "r1" | model_version == "K2"), 
+       aes(x = area_mpa, y = harvest, col = model_version)) +
+  geom_line(size=0.5) +
+  facet_wrap(~fishing_p1, scales = "free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = bquote("Harvest density"~(g/m^2))) +
+  theme_minimal() +
+  ggtitle("Fishing effort outside MPA") +
+  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+##mpa
+ggplot(outcome_long_mpa %>% filter(fishing_p1 == 0.1 | fishing_p1 == 0.5 | fishing_p1 == 0.9) %>%
+         filter(model_version == "No Temp" | model_version == "r1" | model_version == "K2"), 
+       aes(x = area_mpa, y = population, col = model_version)) +
+  geom_line(size=0.5) +
+  facet_wrap(~fishing_p1, scales = "free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = bquote("MPA fish density"~(g/m^2))) +
+  theme_minimal() +
+  ggtitle("Fishing effort outside MPA") +
+  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
