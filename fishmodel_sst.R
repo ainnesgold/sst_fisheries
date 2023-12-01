@@ -1,10 +1,11 @@
 library(tidyverse)
-
+library(ggpubr)
+library(grid)
 
 projections <- read.csv("anomaly_df.csv")
 SST_dev <- projections[['anomaly']]
-SST_dev_loweropttemp <- projections[['anomaly']] + 1 #larger anomaly = lower optimal temp
-SST_dev_higheropttemp <- projections[['anomaly']] - 1 #smaller anomaly = higher optimal temp
+#SST_dev_loweropttemp <- projections[['anomaly']] + 1 #larger anomaly = lower optimal temp
+#SST_dev_higheropttemp <- projections[['anomaly']] - 1 #smaller anomaly = higher optimal temp
 
 patch_area <- c(1, 0)
 number_patches <- length(patch_area)
@@ -54,11 +55,11 @@ for (t in 2:timesteps) {
     population_r1[t,] <- population_r1[t-1,] + r_temp_1[t] * population_r1[t-1,] * (1 - population_r1[t-1,] / K)
     
     #temp dependent r - higher optimal temp
-    r_temp_2[t] <- 0.3 + 0*SST_dev_higheropttemp[t] + -0.0037*SST_dev_higheropttemp[t]^2
+    r_temp_2[t] <- 0.3 + 0*(SST_dev[t] - 1) + -0.0037*(SST_dev[t] - 1 )^2
     population_r2[t,] <- population_r2[t-1,] + r_temp_2[t] * population_r2[t-1,] * (1 - population_r2[t-1,] / K)
     
     #temp dependent r - lower optimal temp
-    r_temp_3[t] <- 0.3 + 0*SST_dev_loweropttemp[t] + -0.0037*SST_dev_loweropttemp[t]^2
+    r_temp_3[t] <- 0.3 + 0*(SST_dev[t] + 1) + -0.0037*(SST_dev[t] + 1 )^2
     population_r3[t,] <- population_r3[t-1,] + r_temp_3[t] * population_r3[t-1,] * (1 - population_r3[t-1,] / K)
     
     #temp dependent K - piece wise linear function
@@ -96,11 +97,31 @@ df <-cbind(NoTemp = population[,1], r1 = population_r1[,1], r2 = population_r2[,
 df_long <- pivot_longer(as.data.frame(df), NoTemp:K2, names_to = "Temp_version", values_to = "Population")
 
 df_long$Temp_version <- factor(df_long$Temp_version, levels = c("NoTemp", "r1", "r2", "r3", "K1", "K2"),
-                               labels = c("No Temp", "r1", "r2", 
+                               labels = c("Baseline", "r1", "r2", 
                                           "r3", "K1", "K2"))
 
-ggplot(df_long, aes(x=time, y=Population, col=Temp_version)) +
+p1<-ggplot(df_long, aes(x=time, y=Population, col=Temp_version)) +
   geom_line() +
   scale_color_viridis_d(name = "Model version")+
   theme_minimal() +
-  theme(text = element_text(size=20), legend.position = "top")
+  ggtitle("A.") +
+  theme(text = element_text(size=20), legend.position = "top") +
+  labs(x = "Years", y = bquote("Fish biomass"~(g/m^2)))
+
+
+#zoomed in
+p2<-ggplot(df_long %>% filter(time > 15 & time < 25), aes(x=time, y=Population, col=Temp_version)) +
+  geom_line(lwd=1, position=position_dodge(width=0.2)) +
+  scale_color_viridis_d(name = "Model version")+
+  theme_minimal() +
+  ggtitle("B.") +
+  theme(text = element_text(size=20), legend.position = "top") +
+  labs(x = "Years", y = bquote("Fish biomass"~(g/m^2)))
+
+
+figure<-ggarrange(p1  + rremove("xlab"),p2+rremove("ylab") + rremove("xlab"),nrow=1, common.legend = TRUE, legend = "top")
+
+annotate_figure(figure, bottom = text_grob("Years",
+                                  size = 20))
+
+

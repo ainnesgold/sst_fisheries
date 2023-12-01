@@ -15,11 +15,18 @@ quad_r3 <- function (x, a=0.3, b=0, c=-0.0037) {
   a + b*(x+1) + c*(x+1)^2
 }
 
-curve(quad_r, from = -10, to = 10, xlab="Anomaly (°C)", ylab = "", col=1)
-curve(quad_r2, from = -10, to = 10, add = TRUE, col=2)
-curve(quad_r3, from = -10, to = 10, add = TRUE, col=3)
+par(mar = c(5, 5, 4, 2) + 0.1)  # Adjust the values as needed
 
+curve(quad_r, from = -10, to = 10, xlab = "Anomaly (°C)", ylab = "Intrinsic growth rate", 
+      col = 1, cex.lab = 1.5, cex.axis = 1.5, cex.main = 1.5, lwd = 2)
+
+curve(quad_r, from = -10, to = 10, xlab="Anomaly (°C)", ylab = "", col=1, lwd = 2)
+curve(quad_r2, from = -10, to = 10, add = TRUE, col=2, lwd = 2)
+curve(quad_r3, from = -10, to = 10, add = TRUE, col=3, lwd = 2)
 title(ylab= "Intrinsic growth rate", line=2, cex.lab=1.2)
+legend("topright", legend=c("r1", "r2", "r3"), col=1:3, lty=1, cex=0.5, text.width = 2)
+
+
 
 
 
@@ -49,31 +56,51 @@ x_value <- 1
 result <- restricted_y(x_value)
 cat("For x =", x_value, ", y =", result, "\n")
 
-curve(linear_equation, from = 0, to = 4, xlab = "Anomaly (°C)", ylab = "")
-title(ylab= bquote('Carrying capacity'~(g/m^2)), line=2, cex.lab=1.2)
+##quadratic - same points used to establish linear
+#max is "current" temp and max K
+# 3 degree deviation (2040 temp) associated with 6% decline in max
+# Define the quad_K function
+quad_K <- function(x, a = 101.3, b = 0, c = -0.7) {
+  y <- a + b * x + c * x^2
+  y <- ifelse(y < 10, 10, y)
+  return(y)
+}
+
+
+
+# Generate x values
+x_values <- seq(-20, 20, by = 1)  # Adjust the range and step size as needed
+
+# Apply the restricted_y function to each x value
+y_values <- sapply(x_values, restricted_y)
+
+# Plot the function
+par(mar = c(5, 5, 4, 2) + 0.1)
+
+plot(x_values, y_values, type = "l", col = "blue", lwd = 2, 
+     xlab = "Anomaly (°C)", ylab = bquote('Carrying capacity'~(g/m^2)))
+
+# Add the quad_K plot on top of the restricted_y plot
+# Plot the quad_K function
+curve(quad_K, from = -20, to = 20, add=TRUE, col = "red", lwd = 2)
+
+# Add labels to the plot
+#title(ylab = "restricted_y and quad_K", line = 2, cex.lab = 1.2)
+
+# Add a legend
+legend("topright", legend = c("K1", "K2"), col = c("blue", "red"), lwd = 2)
+
+
+
+
+
+
 
 
 ##logarithmic - not sure this one makes sense. might leave out.
 #log_equation <- function(x) {
- # - log(x) + 101.3
+# - log(x) + 101.3
 #}
 #curve(log_equation, from = 0, to = 50, xlab = "Mean SST (°C)", ylab = "")
-
-
-##quadratic - same points used to establish linear
-#max is "current" temp and max K
-# 3 degree deviation (2040 temp) associated with 6% decline in max
-quad_K <- function (x, a=101.3, b=0, c=-.7) {
-  y = a + b*x + c*x^2
- # if (y < 10) {
-  #  y <- 10
-  #}
-  return(y)
-}
-
-quad_K(-3)
-
-curve(quad_K, from = -3, to = 3, xlab="Anomaly (°C)", ylab = "")
-title(ylab= "Carrying capacity", line=2, cex.lab=1.2)
 
 
