@@ -493,8 +493,8 @@ p1<-ggplot(outcome_harvest_long_open  %>%
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("Harvest"~(g/m^2))) +
   theme_minimal() +
-  ggtitle("") +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), 
+  ggtitle("A.") +
+  theme(text = element_text(size=20),
         legend.position = "bottom") +
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
@@ -514,8 +514,8 @@ p2<-ggplot(outcome_harvest_long_open %>%
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("Harvest"~(g/m^2))) +
   theme_minimal() +
-  #ggtitle("Fishing effort outside MPA") +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  ggtitle("B.") +
+  theme(text = element_text(size=20), legend.position = "bottom") +
   scale_x_continuous(breaks=c(0.4, 0.5, 0.6),
                      labels = c("0.4", "0.5", "0.6"))
 
@@ -558,8 +558,8 @@ p1<-ggplot(outcome_long_mpa %>%
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("MPA fish biomass"~(g/m^2))) +
   theme_minimal() +
-  #ggtitle("Fishing effort") +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  ggtitle("A.") +
+  theme(text = element_text(size=20), legend.position = "bottom") +
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
 
@@ -578,8 +578,8 @@ p2<-ggplot(outcome_long_mpa %>%
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("MPA fish biomass"~(g/m^2))) +
   theme_minimal() +
-  #ggtitle("Fishing effort outside MPA") +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") #+
+  ggtitle("B.") +
+  theme(text = element_text(size=20), legend.position = "bottom") #+
   #scale_x_continuous(breaks=c(0.4, 0.5, 0.6),
                     # labels = c("0.4", "0.5", "0.6"))
 
@@ -620,8 +620,8 @@ p1<-ggplot(outcome_harvest_long_open  %>%
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = "CPUE") +
   theme_minimal() +
-  ggtitle("") +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), 
+  ggtitle("A.") +
+  theme(text = element_text(size=20),
         legend.position = "bottom") +
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
@@ -641,8 +641,8 @@ p2<-ggplot(outcome_harvest_long_open %>%
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = "CPUE") +
   theme_minimal() +
-  #ggtitle("Fishing effort outside MPA") +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  ggtitle("B.") +
+  theme(text = element_text(size=20), legend.position = "bottom") +
   scale_x_continuous(breaks=c(0.4, 0.5, 0.6),
                      labels = c("0.4", "0.5", "0.6"))
 

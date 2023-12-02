@@ -465,10 +465,11 @@ p1<-ggplot(outcome_harvest_long_open %>%
          filter(S == 0.1 | S == 0.5 | S == 0.9), aes(x = area_mpa, y = harvest, col = model_version)) +
   geom_line(lwd=1) +
   facet_wrap(~S) +
+  ggtitle("A.") +
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("Harvest"~(g/m^2))) +
   theme_minimal() +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), 
+  theme(text = element_text(size=20),
         legend.position = "bottom") +
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
@@ -495,16 +496,17 @@ p2<-ggplot(outcome_long_mpa %>%
              filter(S == 0.1 | S == 0.5 | S == 0.9), aes(x = area_mpa, y = population, col = model_version)) +
   geom_line(lwd=1) +
   facet_wrap(~S) +
+  ggtitle("B.") +
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("MPA fish biomass"~(g/m^2))) +
   theme_minimal() +
   #ggtitle("Site fidelity")
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  theme(text = element_text(size=20), legend.position = "bottom") +
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
 
 
-figure<-ggarrange(p1  + rremove("xlab"),p2 + rremove("xlab"),nrow=1, common.legend = TRUE, legend = "top")
+figure<-ggarrange(p1  + rremove("xlab"),p2 + rremove("xlab"),nrow=2, common.legend = TRUE, legend = "top")
 
 annotate_figure(figure, bottom = text_grob("MPA area (proportion)",
                                            size = 20))
