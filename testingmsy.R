@@ -9,6 +9,7 @@ number_patches <- length(patch_area)
 timesteps <- 70 #length(SST_dev)
 r <- 0.3
 K <- 101.3
+catchability <- 1
 
 population <- array(NA, dim = c(timesteps, number_patches))
 harvest <- array(NA, dim = c(timesteps, number_patches))
@@ -32,7 +33,7 @@ for (iter in 1:nrow(parameter_grid)) {
   
   for (t in 2:timesteps) {
     population[t] <- population[t-1] + r * population[t-1] * (1 - population[t-1] / K)
-    harvest[t] <- population[t] * (1 - exp(-parameter_grid[['fishing_effort']][[iter]]))
+    harvest[t] <- population[t] * (1 - exp(-parameter_grid[['fishing_effort']][[iter]]) * catchability)
     population[t] <- population[t] * (1 - (1 - exp(-parameter_grid[['fishing_effort']][[iter]])))
   }
   

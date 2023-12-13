@@ -100,11 +100,11 @@ df_long$Temp_version <- factor(df_long$Temp_version, levels = c("NoTemp", "r1", 
                                labels = c("Baseline", "r1", "r2", 
                                           "r3", "K1", "K2"))
 
-p1<-ggplot(df_long, aes(x=time, y=Population, col=Temp_version)) +
+ggplot(df_long, aes(x=time, y=Population, col=Temp_version)) +
   geom_line(lwd=1, position=position_dodge(width=0.2)) +
   scale_color_viridis_d(name = "Model version")+
   theme_minimal() +
-  ggtitle("A.") +
+  #ggtitle("A.") +
   theme(text = element_text(size=20), legend.position = "top") +
   labs(x = "Years", y = bquote("Fish biomass"~(g/m^2)))
 

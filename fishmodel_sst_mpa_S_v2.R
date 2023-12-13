@@ -374,14 +374,30 @@ outcome_long_wtavg$model_version <- factor(outcome_long_wtavg$model_version,
                                            labels = c("Baseline", "r1", "r2", 
                                                       "r3", "K1", "K2"))
 
-ggplot(outcome_long_wtavg, aes(x = area_mpa, y = population, col = model_version)) +
-  geom_line() +
+#WEIGHTED AVG
+p1<-ggplot(outcome_long_wtavg %>%
+             filter(S == 0.1 | S == 0.5 | S == 0.9), aes(x = area_mpa, y = population, col = model_version)) +
+  geom_line(lwd=1) +
   facet_wrap(~S) +
+  ggtitle("A.") +
   scale_color_viridis_d(name="Model version") +
-  labs(x = "MPA area (proportion)", y = bquote("Wt avg fish biomass"~(g/m^2))) +
+  labs(x = "MPA area (proportion)", y = bquote("Weighted avg biomass"~(g/m^2))) +
   theme_minimal() +
-  ggtitle("Site fidelity") +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  theme(text = element_text(size=20),
+        legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+#supplement
+ggplot(outcome_long_wtavg, aes(x = area_mpa, y = population, col = model_version)) +
+  geom_line(lwd=1) +
+  facet_wrap(~S) +
+  #ggtitle("A.") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = bquote("Weighted avg biomass"~(g/m^2))) +
+  theme_minimal() +
+  theme(text = element_text(size=20),
+        legend.position = "bottom") +
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
 
@@ -456,16 +472,12 @@ outcome_harvest_long_open$model_version <- factor(outcome_harvest_long_open$mode
                                                              "open_harvest_r3", "open_harvest_K1", "open_harvest_K2"),
                                                   labels = c("Baseline", "r1", "r2", 
                                                              "r3", "K1", "K2"))
-#Main text
-p1<-ggplot(outcome_harvest_long_open %>%
-         filter(model_version == "Baseline" |
-                  model_version == "r1" |
-                  model_version == "K2"
-                  ) %>%
+#harvest
+p2<-ggplot(outcome_harvest_long_open %>%
          filter(S == 0.1 | S == 0.5 | S == 0.9), aes(x = area_mpa, y = harvest, col = model_version)) +
   geom_line(lwd=1) +
-  facet_wrap(~S) +
-  ggtitle("A.") +
+  facet_wrap(~S, scales="free") +
+  ggtitle("B.") +
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("Harvest"~(g/m^2))) +
   theme_minimal() +
@@ -474,10 +486,16 @@ p1<-ggplot(outcome_harvest_long_open %>%
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
 
+figure<-ggarrange(p1  + rremove("xlab"),p2 + rremove("xlab"),nrow=2, common.legend = TRUE, legend = "top")
+
+annotate_figure(figure, bottom = text_grob("MPA area (proportion)",
+                                           size = 20))
+
+
 #Supplemental
 ggplot(outcome_harvest_long_open, aes(x = area_mpa, y = harvest, col = model_version)) +
   geom_line() +
-  facet_wrap(~S) +
+  facet_wrap(~S, scales="free") +
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = bquote("Harvest"~(g/m^2))) +
   theme_minimal() +
@@ -488,7 +506,7 @@ ggplot(outcome_harvest_long_open, aes(x = area_mpa, y = harvest, col = model_ver
 
 
 #Main
-p2<-ggplot(outcome_long_mpa %>%
+ggplot(outcome_long_mpa %>%
              filter(model_version == "Baseline" |
                       model_version == "r1" |
                       model_version == "K2"
@@ -506,10 +524,6 @@ p2<-ggplot(outcome_long_mpa %>%
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
 
 
-figure<-ggarrange(p1  + rremove("xlab"),p2 + rremove("xlab"),nrow=2, common.legend = TRUE, legend = "top")
-
-annotate_figure(figure, bottom = text_grob("MPA area (proportion)",
-                                           size = 20))
 
 #Supplement
 ggplot(outcome_long_mpa, aes(x = area_mpa, y = population, col = model_version)) +
