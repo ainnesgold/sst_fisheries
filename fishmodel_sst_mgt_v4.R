@@ -434,7 +434,7 @@ p1<-ggplot(outcome_combined_long %>%
 #zoomed in
 p2<-ggplot(outcome_combined_long %>%
              filter(fishing_p1 == 0.1 | fishing_p1 == 0.5 | fishing_p1 == 0.9) %>%
-             filter(area_mpa >=0.5 & area_mpa <=0.7),
+             filter(area_mpa > 0.3 & area_mpa <=0.7),
            aes(x = area_mpa, y = rel_biomass, col = model_version)) +
   geom_line(lwd=0.75) +
   facet_wrap(~fishing_p1, scales="free") +

@@ -63,11 +63,34 @@ legend("right", legend = parameter_grid$fishing_effort, col = 1:nrow(parameter_g
 ##PLOTTING EQUILIBRIUM VALUES VS FISHING EFFORT
 outcome <- cbind(parameter_grid, outcome_population_end, outcome_harvest_end)
 
-ggplot(outcome, aes(x=fishing_effort, y=outcome_population_end)) +
-         geom_line()
+p1<-ggplot(outcome, aes(x=fishing_effort, y=outcome_population_end)) +
+  geom_line(lwd=1) +
+  labs(x="Fishing effort", y = bquote("Biomass"~(g/m^2))) +
+  theme_minimal() +
+  theme(text = element_text(size=20),
+        legend.position = "bottom")
+  
        
-ggplot(outcome, aes(x=fishing_effort, y=outcome_harvest_end)) +
-  geom_line()      
-       
+p2<-ggplot(outcome, aes(x=fishing_effort, y=outcome_harvest_end)) +
+  geom_line(lwd=1) +
+  labs(x="Fishing effort", y = bquote("Harvest"~(g/m^2))) +
+  theme_minimal() +
+  theme(text = element_text(size=20),
+        legend.position = "bottom")  
+
+p3<-ggplot(outcome, aes(x=fishing_effort, y=outcome_harvest_end/fishing_effort)) +
+  geom_line(lwd=1) +
+  labs(x="Fishing effort", y = "CPUE") +
+  theme_minimal() +
+  theme(text = element_text(size=20),
+        legend.position = "bottom")  
+
+
+
+figure<-ggarrange(p1+rremove("xlab"), p2+rremove("xlab"), p3+rremove("xlab"),
+                  nrow=3, ncol=1, common.legend = TRUE, legend = "top")
+
+annotate_figure(figure, bottom = text_grob("Fishing effort",
+                                           size = 20))
        
        
