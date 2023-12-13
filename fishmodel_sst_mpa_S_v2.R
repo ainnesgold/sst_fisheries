@@ -27,7 +27,7 @@ parameter_grid <- expand.grid(patch_area = patch_area_list,
 
 #saving outputs
 outcome_population <- matrix(0, ncol = 2, nrow = nrow(parameter_grid))
-outcome_harvest <- matrix(0, ncol = 2, nrow = nrow(parameter_grid))
+outcome_harvest_notemp <- matrix(0, ncol = 2, nrow = nrow(parameter_grid))
 
 outcome_population_r1 <- matrix(0, ncol = 2, nrow = nrow(parameter_grid))
 outcome_harvest_r1 <- matrix(0, ncol = 2, nrow = nrow(parameter_grid))
@@ -281,7 +281,7 @@ for (iter in 1:nrow(parameter_grid)){
   }
   
   outcome_population[iter, ] <- colMeans(population[(t-19):t,])
-  outcome_harvest[iter, ] <- colMeans(harvest[(t-19):t,])
+  outcome_harvest_notemp[iter, ] <- colMeans(harvest[(t-19):t,])
   
   outcome_population_r1[iter, ] <- colMeans(population_r1[(t-19):t,])
   outcome_harvest_r1[iter, ] <- colMeans(harvest_r1[(t-19):t,])
@@ -304,7 +304,7 @@ for (iter in 1:nrow(parameter_grid)){
 
 colnames(outcome_population) <- c("open_fish_notemp", "mpa_fish_notemp")
 outcome_population <- as.data.frame(outcome_population)
-colnames(outcome_harvest) <- c("open_harvest_notemp", "mpa_harvest_notemp")
+colnames(outcome_harvest_notemp) <- c("open_harvest_notemp", "mpa_harvest_notemp")
 
 colnames(outcome_population_r1) <- c("open_fish_r1", "mpa_fish_r1")
 outcome_population_r1 <- as.data.frame(outcome_population_r1)
@@ -415,35 +415,6 @@ p1<-ggplot(outcome_combined_long %>%
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
 
 
-
-
-
-
-figure<-ggarrange(p1+rremove("xlab")+rremove("ylab"), p2+rremove("xlab")+rremove("ylab"), 
-                  nrow=2, ncol=1, common.legend = TRUE, legend = "top")
-
-annotate_figure(figure, bottom = text_grob("MPA area (proportion)",
-                                           size = 20),
-                left = text_grob("Relative fish biomass",
-                                 size = 20, rot=90))
-
-
-
-
-
-#supplemental relative biomass
-ggplot(outcome_combined_long,
-       aes(x = area_mpa, y = rel_biomass, col = model_version)) +
-  geom_line(lwd=0.75) +
-  facet_wrap(~fishing_p1, scales="free") +
-  scale_color_viridis_d(name="Model version") +
-  labs(x = "MPA area (proportion)", y = "Relative biomass") +
-  theme_minimal() +
-  theme(text = element_text(size=20), legend.position = "bottom") +
-  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
-                     labels = c("0", "0.25", "0.5", "0.75", "1"))
-
-
 #HARVEST
 
 outcome_harvest_2 <- outcome_harvest %>%
@@ -472,7 +443,7 @@ outcome_harvest_long$model_version <- factor(outcome_harvest_long$model_version,
                                              labels = c("Baseline", "r1", "r2", 
                                                         "r3", "K1", "K2"))
 
-ggplot(outcome_harvest_long %>%
+p2<-ggplot(outcome_harvest_long %>%
              filter(S == 0.1 | S == 0.5 | S == 0.9),
            aes(x = area_mpa, y = rel_harvest, col = model_version)) +
   geom_line(lwd=0.75) +
@@ -480,11 +451,34 @@ ggplot(outcome_harvest_long %>%
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = "Relative harvest") +
   theme_minimal() +
-  ggtitle("A.") +
+  ggtitle("B.") +
   theme(text = element_text(size=20), legend.position = "bottom") +
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
 
+
+
+figure<-ggarrange(p1+rremove("xlab"), p2+rremove("xlab"), 
+                  nrow=2, ncol=1, common.legend = TRUE, legend = "top")
+
+annotate_figure(figure, bottom = text_grob("MPA area (proportion)",
+                                           size = 20))
+
+
+
+
+
+#supplemental relative biomass
+ggplot(outcome_combined_long,
+       aes(x = area_mpa, y = rel_biomass, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~S, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative biomass") +
+  theme_minimal() +
+  theme(text = element_text(size=20), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
 
 
 
@@ -493,7 +487,7 @@ ggplot(outcome_harvest_long %>%
 ggplot(outcome_harvest_long,
        aes(x = area_mpa, y = rel_harvest, col = model_version)) +
   geom_line(lwd=0.75) +
-  facet_wrap(~fishing_p1, scales="free") +
+  facet_wrap(~S, scales="free") +
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = "Relative harvest") +
   theme_minimal() +
