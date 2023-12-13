@@ -361,25 +361,22 @@ outcome_harvest$fishing_p2 <- map_dbl(outcome_harvest$fishing_effort, 2)
 #which biomass should i compare to optimal biomass - open, mpa, avg?
 #which optimal should i compare the temp biomasses too - the baseline optimal biomass or their own biomass for the optimal scenario?
 
-optimal_fishing_effort = 0.1
+#from testingmsy.R
+optimal_fishing_effort = 0.14
+optimal_biomass = 5.047030e+01
+optimal_harvest = 7.584363e+00
+optimal_CPUE = 7.584363e+00 / 0.14
   
 #######################. BIOMASS. ##################################
-optimal_biomass <- outcome %>% filter(area_mpa == 0 & fishing_p1 == optimal_fishing_effort) %>%
-  summarize(open_fish_notemp, open_fish_r1, open_fish_r2, open_fish_r3, open_fish_K1, open_fish_K2)
+#optimal_biomass <- outcome %>% filter(area_mpa == 0 & fishing_p1 == optimal_fishing_effort) %>%
+ # summarize(open_fish_notemp, open_fish_r1, open_fish_r2, open_fish_r3, open_fish_K1, open_fish_K2)
 
 biomass_mapping <- data.frame(
-  fishing_p1 = unique(outcome$fishing_p1),
-  optimal_biomass = optimal_biomass[1,1],
-  optimal_biomass_r1 = optimal_biomass[1,1],
-  optimal_biomass_r2 = optimal_biomass[1,1], 
-  optimal_biomass_r3 = optimal_biomass[1,1], 
-  optimal_biomass_k1 = optimal_biomass[1,1], 
-  optimal_biomass_k2 = optimal_biomass[1,1]
+  fishing_p1 = unique(outcome$fishing_p1)
 )
+biomass_mapping$optimal_biomass <- optimal_biomass
 
 outcome_index <- merge(outcome, biomass_mapping, by = "fishing_p1")
-
-
 
 outcome_index$combined_fish_notemp <- (outcome_index$open_fish_notemp * outcome_index$area_open) + 
   (outcome_index$mpa_fish_notemp * outcome_index$area_mpa)
@@ -397,15 +394,14 @@ outcome_index$combined_fish_K2 <- (outcome_index$open_fish_K2 * outcome_index$ar
 
 outcome_combined <- outcome_index %>%
   select(combined_fish_notemp, combined_fish_r1, combined_fish_r2, combined_fish_r3, combined_fish_K1, combined_fish_K2,
-         optimal_biomass, optimal_biomass_r1, optimal_biomass_r2, optimal_biomass_r3, optimal_biomass_k1, optimal_biomass_k2,
-         fishing_p1, area_mpa)
+         optimal_biomass, fishing_p1, area_mpa)
 
 outcome_combined$rel_biomass_notemp <- outcome_combined$combined_fish_notemp / outcome_combined$optimal_biomass
-outcome_combined$rel_biomass_r1 <- outcome_combined$combined_fish_r1 / outcome_combined$optimal_biomass_r1
-outcome_combined$rel_biomass_r2 <- outcome_combined$combined_fish_r2 / outcome_combined$optimal_biomass_r2
-outcome_combined$rel_biomass_r3 <- outcome_combined$combined_fish_r3 / outcome_combined$optimal_biomass_r3
-outcome_combined$rel_biomass_K1 <- outcome_combined$combined_fish_K1 / outcome_combined$optimal_biomass_k1
-outcome_combined$rel_biomass_K2 <- outcome_combined$combined_fish_K2 / outcome_combined$optimal_biomass_k2
+outcome_combined$rel_biomass_r1 <- outcome_combined$combined_fish_r1 / outcome_combined$optimal_biomass
+outcome_combined$rel_biomass_r2 <- outcome_combined$combined_fish_r2 / outcome_combined$optimal_biomass
+outcome_combined$rel_biomass_r3 <- outcome_combined$combined_fish_r3 / outcome_combined$optimal_biomass
+outcome_combined$rel_biomass_K1 <- outcome_combined$combined_fish_K1 / outcome_combined$optimal_biomass
+outcome_combined$rel_biomass_K2 <- outcome_combined$combined_fish_K2 / outcome_combined$optimal_biomass
 
 outcome_combined <- outcome_combined %>%
   select(rel_biomass_notemp, rel_biomass_r1, rel_biomass_r2, rel_biomass_r3, rel_biomass_K1,
@@ -430,10 +426,209 @@ p1<-ggplot(outcome_combined_long %>%
   scale_color_viridis_d(name="Model version") +
   labs(x = "MPA area (proportion)", y = "Relative biomass") +
   theme_minimal() +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
+  ggtitle("A.")+
+  theme(text = element_text(size=20), legend.position = "bottom") +
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
 
+#zoomed in
+p2<-ggplot(outcome_combined_long %>%
+             filter(fishing_p1 == 0.1 | fishing_p1 == 0.5 | fishing_p1 == 0.9) %>%
+             filter(area_mpa >=0.5 & area_mpa <=0.7),
+           aes(x = area_mpa, y = rel_biomass, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~fishing_p1, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative biomass") +
+  theme_minimal() +
+  ggtitle("B.")+
+  theme(text = element_text(size=20), legend.position = "bottom")
+
+
+
+
+figure<-ggarrange(p1+rremove("xlab")+rremove("ylab"), p2+rremove("xlab")+rremove("ylab"), 
+                  nrow=2, ncol=1, common.legend = TRUE, legend = "top")
+
+annotate_figure(figure, bottom = text_grob("MPA area (proportion)",
+                                           size = 20),
+                left = text_grob("Relative fish biomass",
+                                 size = 20, rot=90))
+
+
+
+#supplemental relative biomass
+ggplot(outcome_combined_long,
+       aes(x = area_mpa, y = rel_biomass, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~fishing_p1, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative biomass") +
+  theme_minimal() +
+  theme(text = element_text(size=20), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+
+
+##RELATIVE HARVEST
+
+#optimal_harvest <- outcome_harvest %>% filter(area_mpa == 0 & fishing_p1 == optimal_fishing_effort) %>%
+ # summarize(open_harvest_notemp, open_harvest_r1, open_harvest_r2, open_harvest_r3, open_harvest_K1, open_harvest_K2)
+
+harvest_mapping <- data.frame(
+  fishing_p1 = unique(outcome$fishing_p1)
+)
+
+harvest_mapping$optimal_harvest <- optimal_harvest
+
+outcome_harvest_index <- merge(outcome_harvest, harvest_mapping, by = "fishing_p1")
+
+outcome_harvest_2 <- outcome_harvest_index %>%
+  select(open_harvest_notemp, open_harvest_r1, open_harvest_r2, open_harvest_r3, 
+         open_harvest_K1, open_harvest_K2,
+         optimal_harvest,
+         fishing_p1, area_mpa)
+
+outcome_harvest_2$rel_open_harvest_notemp <- outcome_harvest_2$open_harvest_notemp / outcome_harvest_2$optimal_harvest
+outcome_harvest_2$rel_open_harvest_r1 <- outcome_harvest_2$open_harvest_r1 / outcome_harvest_2$optimal_harvest
+outcome_harvest_2$rel_open_harvest_r2 <- outcome_harvest_2$open_harvest_r2 / outcome_harvest_2$optimal_harvest
+outcome_harvest_2$rel_open_harvest_r3 <- outcome_harvest_2$open_harvest_r3 / outcome_harvest_2$optimal_harvest
+outcome_harvest_2$rel_open_harvest_K1 <- outcome_harvest_2$open_harvest_K1 / outcome_harvest_2$optimal_harvest
+outcome_harvest_2$rel_open_harvest_K2 <- outcome_harvest_2$open_harvest_K2 / outcome_harvest_2$optimal_harvest
+
+outcome_harvest_2 <- outcome_harvest_2 %>%
+  select(rel_open_harvest_notemp, rel_open_harvest_r1, rel_open_harvest_r2, rel_open_harvest_r3, rel_open_harvest_K1,
+         rel_open_harvest_K2, fishing_p1, area_mpa)
+
+
+outcome_harvest_long <- pivot_longer(outcome_harvest_2, rel_open_harvest_notemp:rel_open_harvest_K2, names_to = "model_version",
+                                     values_to = "rel_harvest")
+
+outcome_harvest_long$model_version <- factor(outcome_harvest_long$model_version, 
+                                             levels = c("rel_open_harvest_notemp", "rel_open_harvest_r1", "rel_open_harvest_r2", 
+                                                        "rel_open_harvest_r3", "rel_open_harvest_K1", "rel_open_harvest_K2"),
+                                             labels = c("Baseline", "r1", "r2", 
+                                                        "r3", "K1", "K2"))
+
+p1<-ggplot(outcome_harvest_long %>%
+             filter(fishing_p1 == 0.1 | fishing_p1 == 0.5 | fishing_p1 == 0.9),
+           aes(x = area_mpa, y = rel_harvest, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~fishing_p1, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative harvest") +
+  theme_minimal() +
+  ggtitle("A.") +
+  theme(text = element_text(size=20), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+
+p2<-ggplot(outcome_harvest_long %>%
+             filter(fishing_p1 == 0.1 | fishing_p1 == 0.5 | fishing_p1 == 0.9) %>%
+             filter(area_mpa>0.3 & area_mpa <0.7),
+           aes(x = area_mpa, y = rel_harvest, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~fishing_p1, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative harvest") +
+  theme_minimal() +
+  ggtitle("B.") + 
+  theme(text = element_text(size=20), legend.position = "bottom")
+
+
+
+figure<-ggarrange(p1+rremove("xlab")+rremove("ylab"), p2+rremove("xlab")+rremove("ylab"), 
+                  nrow=2, ncol=1, common.legend = TRUE, legend = "top")
+
+annotate_figure(figure, bottom = text_grob("MPA area (proportion)",
+                                           size = 20),
+                left = text_grob("Relative harvest",
+                                 size = 20, rot=90))
+
+#supplemental harvest
+ggplot(outcome_harvest_long,
+       aes(x = area_mpa, y = rel_harvest, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~fishing_p1, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative harvest") +
+  theme_minimal() +
+  theme(text = element_text(size=20), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+###################.   CPUE.   #########################################################################
+cpue_mapping <- data.frame(
+  fishing_p1 = unique(outcome$fishing_p1)
+)
+
+cpue_mapping$optimal_CPUE <- optimal_CPUE
+
+
+outcome_cpue <- outcome_harvest %>%
+  select(open_harvest_notemp, open_harvest_r1, open_harvest_r2, open_harvest_r3, 
+         open_harvest_K1, open_harvest_K2,
+         fishing_p1, area_mpa)
+
+outcome_cpue$cpue_notemp <- outcome_cpue$open_harvest_notemp / outcome_cpue$fishing_p1
+outcome_cpue$cpue_r1 <- outcome_cpue$open_harvest_r1 / outcome_cpue$fishing_p1
+outcome_cpue$cpue_r2 <- outcome_cpue$open_harvest_r2 / outcome_cpue$fishing_p1
+outcome_cpue$cpue_r3 <- outcome_cpue$open_harvest_r3 / outcome_cpue$fishing_p1
+outcome_cpue$cpue_K1 <- outcome_cpue$open_harvest_K1 / outcome_cpue$fishing_p1
+outcome_cpue$cpue_K2 <- outcome_cpue$open_harvest_K2 / outcome_cpue$fishing_p1
+
+outcome_cpue <- outcome_cpue %>%
+  select(cpue_notemp, cpue_r1, cpue_r2, cpue_r3, cpue_K1, cpue_K2, fishing_p1, area_mpa)
+
+outcome_cpue_index <- merge(outcome_cpue, cpue_mapping, by = "fishing_p1")
+
+outcome_cpue_index <- as.data.frame(outcome_cpue_index)
+outcome_cpue_index[is.na(outcome_cpue_index)] <- 0
+
+#relative CPUE
+outcome_cpue_index$rel_cpue_notemp <- outcome_cpue_index$cpue_notemp / outcome_cpue_index$optimal_CPUE
+outcome_cpue_index$rel_cpue_r1 <- outcome_cpue_index$cpue_r1 / outcome_cpue_index$optimal_CPUE
+outcome_cpue_index$rel_cpue_r2 <- outcome_cpue_index$cpue_r2 / outcome_cpue_index$optimal_CPUE
+outcome_cpue_index$rel_cpue_r3 <- outcome_cpue_index$cpue_r3 / outcome_cpue_index$optimal_CPUE
+outcome_cpue_index$rel_cpue_K1 <- outcome_cpue_index$cpue_K1 / outcome_cpue_index$optimal_CPUE
+outcome_cpue_index$rel_cpue_K2 <- outcome_cpue_index$cpue_K2 / outcome_cpue_index$optimal_CPUE
+
+outcome_cpue_long <- outcome_cpue_index %>%
+  pivot_longer(cols = rel_cpue_notemp:rel_cpue_K2, names_to = "model_version", values_to = "cpue")
+
+outcome_cpue_long$model_version <- factor(outcome_cpue_long$model_version, 
+                                          levels = c("rel_cpue_notemp", "rel_cpue_r1", "rel_cpue_r2", 
+                                                     "rel_cpue_r3", "rel_cpue_K1", "rel_cpue_K2"),
+                                          labels = c("Baseline", "r1", "r2", 
+                                                     "r3", "K1", "K2"))
+ggplot(outcome_cpue_long, 
+       aes(x = area_mpa, y = cpue, col = model_version)) +
+  geom_line() +
+  facet_wrap(~fishing_p1, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative CPUE") +
+  theme_minimal() +
+  theme(text = element_text(size=20), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##END
 
 #Total Stock - Not Relative
 outcome_combined <- outcome_index %>%
@@ -450,7 +645,7 @@ outcome_combined_long$model_version <- factor(outcome_combined_long$model_versio
                                               labels = c("Baseline", "r1", "r2", 
                                                          "r3", "K1", "K2"))
 
-p2<-ggplot(outcome_combined_long %>%
+ggplot(outcome_combined_long %>%
          filter(fishing_p1 == 0.1 | fishing_p1 == 0.5 | fishing_p1 == 0.9),
        aes(x = area_mpa, y = biomass, col = model_version)) +
   geom_line(lwd=0.75) +

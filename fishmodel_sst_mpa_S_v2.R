@@ -326,6 +326,196 @@ colnames(outcome_population_K2) <- c("open_fish_K2", "mpa_fish_K2")
 outcome_population_K2 <- as.data.frame(outcome_population_K2)
 colnames(outcome_harvest_K2) <- c("open_harvest_K2", "mpa_harvest_K2")
 
+
+#Fish population dataframe
+outcome <- cbind(parameter_grid, outcome_population, outcome_population_r1, outcome_population_r2, outcome_population_r3,
+                 outcome_population_K1, outcome_population_K2)
+
+outcome$area_open <- map_dbl(outcome$patch_area, 1)
+outcome$area_mpa <- map_dbl(outcome$patch_area, 2)
+
+##Harvest
+outcome_harvest <- cbind(parameter_grid, outcome_harvest_notemp, outcome_harvest_r1, outcome_harvest_r2, outcome_harvest_r3,
+                         outcome_harvest_K1, outcome_harvest_K2)
+
+outcome_harvest$area_open <- map_dbl(outcome_harvest$patch_area, 1)
+outcome_harvest$area_mpa <- map_dbl(outcome_harvest$patch_area, 2)
+
+
+
+#RELATIVE TO OPTIMAL VALUES
+#optimal nonspatial would be MPA = 0 and fishing at MSY
+
+#questions: 
+#which biomass should i compare to optimal biomass - open, mpa, avg?
+#which optimal should i compare the temp biomasses too - the baseline optimal biomass or their own biomass for the optimal scenario?
+
+#from testingmsy.R
+optimal_fishing_effort = 0.14
+optimal_biomass = 5.047030e+01
+optimal_harvest = 7.584363e+00
+optimal_CPUE = 7.584363e+00 / 0.14
+
+#######################. BIOMASS. ##################################
+#optimal_biomass <- outcome %>% filter(area_mpa == 0 & fishing_p1 == optimal_fishing_effort) %>%
+# summarize(open_fish_notemp, open_fish_r1, open_fish_r2, open_fish_r3, open_fish_K1, open_fish_K2)
+
+outcome_index <- outcome
+
+outcome_index$combined_fish_notemp <- (outcome_index$open_fish_notemp * outcome_index$area_open) + 
+  (outcome_index$mpa_fish_notemp * outcome_index$area_mpa)
+outcome_index$combined_fish_r1 <- (outcome_index$open_fish_r1 * outcome_index$area_open) + 
+  (outcome_index$mpa_fish_r1 * outcome_index$area_mpa)
+outcome_index$combined_fish_r2 <- (outcome_index$open_fish_r2 * outcome_index$area_open) + 
+  (outcome_index$mpa_fish_r2 * outcome_index$area_mpa)
+outcome_index$combined_fish_r3 <- (outcome_index$open_fish_r3 * outcome_index$area_open) + 
+  (outcome_index$mpa_fish_r3 * outcome_index$area_mpa)
+outcome_index$combined_fish_K1 <- (outcome_index$open_fish_K1 * outcome_index$area_open) + 
+  (outcome_index$mpa_fish_K1 * outcome_index$area_mpa)
+outcome_index$combined_fish_K2 <- (outcome_index$open_fish_K2 * outcome_index$area_open) + 
+  (outcome_index$mpa_fish_K2 * outcome_index$area_mpa)
+
+
+outcome_combined <- outcome_index %>%
+  select(combined_fish_notemp, combined_fish_r1, combined_fish_r2, combined_fish_r3, combined_fish_K1, combined_fish_K2, S, area_mpa)
+
+outcome_combined$rel_biomass_notemp <- outcome_combined$combined_fish_notemp / optimal_biomass
+outcome_combined$rel_biomass_r1 <- outcome_combined$combined_fish_r1 / optimal_biomass
+outcome_combined$rel_biomass_r2 <- outcome_combined$combined_fish_r2 / optimal_biomass
+outcome_combined$rel_biomass_r3 <- outcome_combined$combined_fish_r3 / optimal_biomass
+outcome_combined$rel_biomass_K1 <- outcome_combined$combined_fish_K1 / optimal_biomass
+outcome_combined$rel_biomass_K2 <- outcome_combined$combined_fish_K2 / optimal_biomass
+
+outcome_combined <- outcome_combined %>%
+  select(rel_biomass_notemp, rel_biomass_r1, rel_biomass_r2, rel_biomass_r3, rel_biomass_K1,
+         rel_biomass_K2, S, area_mpa)
+
+
+outcome_combined_long <- pivot_longer(outcome_combined, rel_biomass_notemp:rel_biomass_K2, names_to = "model_version",
+                                      values_to = "rel_biomass")
+
+outcome_combined_long$model_version <- factor(outcome_combined_long$model_version, 
+                                              levels = c("rel_biomass_notemp", "rel_biomass_r1", "rel_biomass_r2", 
+                                                         "rel_biomass_r3", "rel_biomass_K1", "rel_biomass_K2"),
+                                              labels = c("Baseline", "r1", "r2", 
+                                                         "r3", "K1", "K2"))
+
+#Total Stock - Relative
+p1<-ggplot(outcome_combined_long %>%
+             filter(S == 0.1 | S == 0.5 | S == 0.9),
+           aes(x = area_mpa, y = rel_biomass, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~S, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative biomass") +
+  theme_minimal() +
+  ggtitle("A.")+
+  theme(text = element_text(size=20), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+
+
+
+
+
+figure<-ggarrange(p1+rremove("xlab")+rremove("ylab"), p2+rremove("xlab")+rremove("ylab"), 
+                  nrow=2, ncol=1, common.legend = TRUE, legend = "top")
+
+annotate_figure(figure, bottom = text_grob("MPA area (proportion)",
+                                           size = 20),
+                left = text_grob("Relative fish biomass",
+                                 size = 20, rot=90))
+
+
+
+
+
+#supplemental relative biomass
+ggplot(outcome_combined_long,
+       aes(x = area_mpa, y = rel_biomass, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~fishing_p1, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative biomass") +
+  theme_minimal() +
+  theme(text = element_text(size=20), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+
+#HARVEST
+
+outcome_harvest_2 <- outcome_harvest %>%
+  select(open_harvest_notemp, open_harvest_r1, open_harvest_r2, open_harvest_r3, 
+         open_harvest_K1, open_harvest_K2,
+         S, area_mpa)
+
+outcome_harvest_2$rel_open_harvest_notemp <- outcome_harvest_2$open_harvest_notemp / optimal_harvest
+outcome_harvest_2$rel_open_harvest_r1 <- outcome_harvest_2$open_harvest_r1 / optimal_harvest
+outcome_harvest_2$rel_open_harvest_r2 <- outcome_harvest_2$open_harvest_r2 / optimal_harvest
+outcome_harvest_2$rel_open_harvest_r3 <- outcome_harvest_2$open_harvest_r3 / optimal_harvest
+outcome_harvest_2$rel_open_harvest_K1 <- outcome_harvest_2$open_harvest_K1 / optimal_harvest
+outcome_harvest_2$rel_open_harvest_K2 <- outcome_harvest_2$open_harvest_K2 / optimal_harvest
+
+outcome_harvest_2 <- outcome_harvest_2 %>%
+  select(rel_open_harvest_notemp, rel_open_harvest_r1, rel_open_harvest_r2, rel_open_harvest_r3, rel_open_harvest_K1,
+         rel_open_harvest_K2, S, area_mpa)
+
+
+outcome_harvest_long <- pivot_longer(outcome_harvest_2, rel_open_harvest_notemp:rel_open_harvest_K2, names_to = "model_version",
+                                     values_to = "rel_harvest")
+
+outcome_harvest_long$model_version <- factor(outcome_harvest_long$model_version, 
+                                             levels = c("rel_open_harvest_notemp", "rel_open_harvest_r1", "rel_open_harvest_r2", 
+                                                        "rel_open_harvest_r3", "rel_open_harvest_K1", "rel_open_harvest_K2"),
+                                             labels = c("Baseline", "r1", "r2", 
+                                                        "r3", "K1", "K2"))
+
+ggplot(outcome_harvest_long %>%
+             filter(S == 0.1 | S == 0.5 | S == 0.9),
+           aes(x = area_mpa, y = rel_harvest, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~S, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative harvest") +
+  theme_minimal() +
+  ggtitle("A.") +
+  theme(text = element_text(size=20), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+
+
+
+
+#supplemental harvest
+ggplot(outcome_harvest_long,
+       aes(x = area_mpa, y = rel_harvest, col = model_version)) +
+  geom_line(lwd=0.75) +
+  facet_wrap(~fishing_p1, scales="free") +
+  scale_color_viridis_d(name="Model version") +
+  labs(x = "MPA area (proportion)", y = "Relative harvest") +
+  theme_minimal() +
+  theme(text = element_text(size=20), legend.position = "bottom") +
+  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
+                     labels = c("0", "0.25", "0.5", "0.75", "1"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##END
+
 #Fish population dataframe
 outcome <- cbind(parameter_grid, outcome_population, outcome_population_r1, outcome_population_r2, outcome_population_r3,
                  outcome_population_K1, outcome_population_K2)
