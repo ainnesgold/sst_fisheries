@@ -508,82 +508,18 @@ ggplot(outcome_harvest_long,
 
 
 
-##END
-
-#Fish population dataframe
+##not in paper - looking at individual patch populations just for fun
 outcome <- cbind(parameter_grid, outcome_population, outcome_population_r1, outcome_population_r2, outcome_population_r3,
                  outcome_population_K1, outcome_population_K2)
 
 outcome$area_open <- map_dbl(outcome$patch_area, 1)
 outcome$area_mpa <- map_dbl(outcome$patch_area, 2)
 
-#Calculate weighted averages for each model version
-outcome$wtavg_fish_notemp <- ((outcome$open_fish_notemp * outcome$area_open) + 
-                                (outcome$mpa_fish_notemp * outcome$area_mpa)) / (outcome$area_open + outcome$area_mpa)
 
-outcome$wtavg_fish_r1 <- ((outcome$open_fish_r1 * outcome$area_open) + 
-                            (outcome$mpa_fish_r1 * outcome$area_mpa)) / (outcome$area_open + outcome$area_mpa)
-
-outcome$wtavg_fish_r2 <- ((outcome$open_fish_r2 * outcome$area_open) + 
-                            (outcome$mpa_fish_r2 * outcome$area_mpa)) / (outcome$area_open + outcome$area_mpa)
-
-outcome$wtavg_fish_r3 <- ((outcome$open_fish_r3 * outcome$area_open) + 
-                            (outcome$mpa_fish_r3 * outcome$area_mpa)) / (outcome$area_open + outcome$area_mpa)
-
-outcome$wtavg_fish_K1 <- ((outcome$open_fish_K1 * outcome$area_open) + 
-                            (outcome$mpa_fish_K1 * outcome$area_mpa)) / (outcome$area_open + outcome$area_mpa)
-
-outcome$wtavg_fish_K2 <- ((outcome$open_fish_K2 * outcome$area_open) + 
-                            (outcome$mpa_fish_K2 * outcome$area_mpa)) / (outcome$area_open + outcome$area_mpa)
-
-
-outcome<-outcome[,c(1:14, 17:22, 15, 16)]
-
-outcome_long <- pivot_longer(outcome, open_fish_notemp:wtavg_fish_K2, names_to = "model_version",
+outcome_long <- pivot_longer(outcome, open_fish_notemp:mpa_fish_K2, names_to = "model_version",
                              values_to = "population")
 
-#total Fish - wt avg both patches combined
-outcome_long_wtavg <- outcome_long %>%
-  filter(model_version == "wtavg_fish_notemp" |
-           model_version == "wtavg_fish_r1" |
-           model_version == "wtavg_fish_r2" |
-           model_version == "wtavg_fish_r3" |
-           model_version == "wtavg_fish_K1" |
-           model_version == "wtavg_fish_K2"
-  )
 
-outcome_long_wtavg$model_version <- factor(outcome_long_wtavg$model_version, 
-                                           levels = c("wtavg_fish_notemp", "wtavg_fish_r1", "wtavg_fish_r2", 
-                                                      "wtavg_fish_r3", "wtavg_fish_K1", "wtavg_fish_K2"),
-                                           labels = c("Baseline", "r1", "r2", 
-                                                      "r3", "K1", "K2"))
-
-#WEIGHTED AVG
-p1<-ggplot(outcome_long_wtavg %>%
-             filter(S == 0.1 | S == 0.5 | S == 0.9), aes(x = area_mpa, y = population, col = model_version)) +
-  geom_line(lwd=1) +
-  facet_wrap(~S) +
-  ggtitle("A.") +
-  scale_color_viridis_d(name="Model version") +
-  labs(x = "MPA area (proportion)", y = bquote("Weighted avg biomass"~(g/m^2))) +
-  theme_minimal() +
-  theme(text = element_text(size=20),
-        legend.position = "bottom") +
-  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
-                     labels = c("0", "0.25", "0.5", "0.75", "1"))
-
-#supplement
-ggplot(outcome_long_wtavg, aes(x = area_mpa, y = population, col = model_version)) +
-  geom_line(lwd=1) +
-  facet_wrap(~S) +
-  #ggtitle("A.") +
-  scale_color_viridis_d(name="Model version") +
-  labs(x = "MPA area (proportion)", y = bquote("Weighted avg biomass"~(g/m^2))) +
-  theme_minimal() +
-  theme(text = element_text(size=20),
-        legend.position = "bottom") +
-  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
-                     labels = c("0", "0.25", "0.5", "0.75", "1"))
 
 #patch 1 fish only
 outcome_long_open <- outcome_long %>%
@@ -629,94 +565,13 @@ outcome_long_mpa$model_version <- factor(outcome_long_mpa$model_version,
                                          labels = c("Baseline", "r1", "r2", 
                                                     "r3", "K1", "K2"))
 
-
-#Harvest dataframe
-outcome_harvest <- cbind(parameter_grid, outcome_harvest, outcome_harvest_r1, outcome_harvest_r2, outcome_harvest_r3,
-                         outcome_harvest_K1, outcome_harvest_K2)
-
-outcome_harvest$area_open <- map_dbl(outcome_harvest$patch_area, 1)
-outcome_harvest$area_mpa <- map_dbl(outcome_harvest$patch_area, 2)
-#outcome_harvest$fishing_p1 <- map_dbl(outcome_harvest$fishing_effort, 1)
-#outcome_harvest$fishing_p2 <- map_dbl(outcome_harvest$fishing_effort, 2)
-
-outcome_harvest_long <- pivot_longer(outcome_harvest, open_harvest_notemp:mpa_harvest_K2, names_to = "model_version",
-                                     values_to = "harvest")
-
-outcome_harvest_long_open <- outcome_harvest_long %>%
-  filter(model_version == "open_harvest_notemp" |
-           model_version == "open_harvest_r1" |
-           model_version == "open_harvest_r2" |
-           model_version == "open_harvest_r3" |
-           model_version == "open_harvest_K1" |
-           model_version == "open_harvest_K2"
-  )
-
-outcome_harvest_long_open$model_version <- factor(outcome_harvest_long_open$model_version, 
-                                                  levels = c("open_harvest_notemp", "open_harvest_r1", "open_harvest_r2", 
-                                                             "open_harvest_r3", "open_harvest_K1", "open_harvest_K2"),
-                                                  labels = c("Baseline", "r1", "r2", 
-                                                             "r3", "K1", "K2"))
-#harvest
-p2<-ggplot(outcome_harvest_long_open %>%
-         filter(S == 0.1 | S == 0.5 | S == 0.9), aes(x = area_mpa, y = harvest, col = model_version)) +
-  geom_line(lwd=1) +
-  facet_wrap(~S, scales="free") +
-  ggtitle("B.") +
-  scale_color_viridis_d(name="Model version") +
-  labs(x = "MPA area (proportion)", y = bquote("Harvest"~(g/m^2))) +
-  theme_minimal() +
-  theme(text = element_text(size=20),
-        legend.position = "bottom") +
-  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
-                     labels = c("0", "0.25", "0.5", "0.75", "1"))
-
-figure<-ggarrange(p1  + rremove("xlab"),p2 + rremove("xlab"),nrow=2, common.legend = TRUE, legend = "top")
-
-annotate_figure(figure, bottom = text_grob("MPA area (proportion)",
-                                           size = 20))
-
-
-#Supplemental
-ggplot(outcome_harvest_long_open, aes(x = area_mpa, y = harvest, col = model_version)) +
-  geom_line() +
-  facet_wrap(~S, scales="free") +
-  scale_color_viridis_d(name="Model version") +
-  labs(x = "MPA area (proportion)", y = bquote("Harvest"~(g/m^2))) +
-  theme_minimal() +
-  theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), 
-        legend.position = "bottom") +
-  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
-                     labels = c("0", "0.25", "0.5", "0.75", "1"))
-
-
-#Main
-ggplot(outcome_long_mpa %>%
-             filter(model_version == "Baseline" |
-                      model_version == "r1" |
-                      model_version == "K2"
-             ) %>%
-             filter(S == 0.1 | S == 0.5 | S == 0.9), aes(x = area_mpa, y = population, col = model_version)) +
-  geom_line(lwd=1) +
-  facet_wrap(~S) +
-  ggtitle("B.") +
-  scale_color_viridis_d(name="Model version") +
-  labs(x = "MPA area (proportion)", y = bquote("MPA fish biomass"~(g/m^2))) +
-  theme_minimal() +
-  #ggtitle("Site fidelity")
-  theme(text = element_text(size=20), legend.position = "bottom") +
-  scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
-                     labels = c("0", "0.25", "0.5", "0.75", "1"))
-
-
-
-#Supplement
 ggplot(outcome_long_mpa, aes(x = area_mpa, y = population, col = model_version)) +
   geom_line() +
-  facet_wrap(~S) +
-  scale_color_viridis_d(name="Model version") +
-  labs(x = "MPA area (proportion)", y = bquote("MPA fish biomass"~(g/m^2))) +
+  facet_wrap(~S, scales="free") +
+  scale_color_viridis_d(name = "Model version") +
+  labs(x = "MPA area (proportion)", y = bquote("MPA area fish biomass"~(g/m^2))) +
   theme_minimal() +
-  #ggtitle("Site fidelity")
+  ggtitle("Site fidelity") +
   theme(text = element_text(size=20), plot.title = element_text(hjust = 0.5), legend.position = "bottom") +
   scale_x_continuous(breaks=c(0, 0.25, 0.5, 0.75, 1),
                      labels = c("0", "0.25", "0.5", "0.75", "1"))
